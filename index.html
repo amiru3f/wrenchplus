@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101c2c">
+  <meta name="description" content="Wrench+ garage profitability calculator. Plan monthly repair jobs, garage overhead, transport costs, break-even workload and operating surplus.">
+  <title>Wrench+ | Garage Profit Planner</title>
+  <style>
+    :root { color-scheme: light; --ink:#172539; --muted:#627187; --muted2:#8190a1; --line:#e5ebf2; --bg:#f3f6fa; --surface:#fff; --navy:#101c2c; --navy2:#233650; --teal:#07bda5; --teal-dark:#087c70; --red:#d6424e; --amber:#b87819; --shadow:0 12px 34px rgba(25,46,74,.055); }
+    * { box-sizing:border-box; }
+    body { margin:0; font: 15px/1.5 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:var(--ink); background:var(--bg); }
+    button,input { font:inherit; }
+    button { cursor:pointer; }
+    button:focus-visible,input:focus-visible { outline:3px solid rgba(7,189,165,.35); outline-offset:2px; }
+    .shell { max-width:1370px; margin:0 auto; padding:0 27px 65px; }
+    .topbar { background:var(--navy); color:white; }
+    .topbar-inner { max-width:1370px; margin:auto; padding:17px 27px; display:flex; justify-content:space-between; gap:20px; align-items:center; }
+    .brand { display:flex; gap:11px; align-items:center; }
+    .brand-symbol { width:42px;height:42px;border:2px solid #41dfc8;border-radius:12px;display:grid;place-items:center;color:#42e2ca;font-weight:850;font-size:21px;letter-spacing:-2px;transform:rotate(-7deg); }
+    .brand-symbol span { transform:rotate(7deg); }
+    .brand-name { font-weight:850; letter-spacing:-.65px;font-size:22px;line-height:1.05; }
+    .brand-sub { color:#aebdce; font-size:11px; margin-top:4px; letter-spacing:1.25px; text-transform:uppercase; font-weight:700; }
+    .autosaved { display:flex;align-items:center;gap:7px;color:#cbdbeb; font-size:13px;white-space:nowrap; }
+    .dot { width:8px;height:8px;background:#2bd6ae;border-radius:50%;box-shadow:0 0 0 4px rgba(43,214,174,.11); }
+    header.hero { display:flex; align-items:flex-end;justify-content:space-between; gap:24px;padding:39px 0 30px; }
+    .eyebrow { font-size:11px; text-transform:uppercase;letter-spacing:2px;font-weight:800;color:var(--teal-dark);margin-bottom:9px; }
+    h1 { font-size:clamp(28px,3.3vw,43px); line-height:1.13;letter-spacing:-1.55px;margin:0 0 10px;font-weight:820; }
+    .lead { margin:0;color:var(--muted);max-width:680px;line-height:1.65; }
+    .actions { display:flex;gap:9px; flex-wrap:wrap;justify-content:flex-end; }
+    .btn { display:inline-flex; align-items:center;justify-content:center; gap:8px;min-height:41px; padding:9px 13px;border-radius:10px;border:1px solid #d6e0e9;background:white;color:var(--ink);font-weight:700;font-size:13px;transition:background .15s,border-color .15s; }
+    .btn:hover { background:#edf4f8;border-color:#b5c6d5; }
+    .btn-primary { background:var(--navy);color:white;border-color:var(--navy); }
+    .btn-primary:hover { background:#28405c; }
+    .kpis { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:20px; }
+    .kpi { background:white;border:1px solid var(--line);border-radius:16px;padding:20px 20px 17px;box-shadow:var(--shadow);position:relative;overflow:hidden; }
+    .kpi:before { content:"";position:absolute;left:0;top:0;width:100%;height:3px;background:#d8e4ec; }
+    .kpi.teal:before { background:var(--teal); }
+    .kpi.negative:before { background:var(--red); }
+    .kpi .label { color:var(--muted);font-size:12px;font-weight:720; }
+    .kpi .number { font-size:clamp(24px,2.7vw,35px); letter-spacing:-1.35px;font-weight:830;margin:6px 0 2px;white-space:nowrap; }
+    .kpi .sub { color:var(--muted2);font-size:12px; }
+    .kpi.teal .number { color:var(--teal-dark); }
+    .kpi.negative .number { color:var(--red); }
+    .columns { display:grid;grid-template-columns:minmax(0,1.56fr) minmax(340px,1fr);align-items:start;gap:20px; }
+    .stack { display:grid;gap:20px;min-width:0; }
+    .panel { background:var(--surface);border-radius:17px;border:1px solid var(--line);box-shadow:var(--shadow);overflow:hidden; }
+    .panel-header { display:flex;justify-content:space-between;align-items:flex-start;padding:22px 24px 15px;gap:14px; }
+    .panel-header h2,.results-header h2 { font-size:18px;letter-spacing:-.4px;line-height:1.35;margin:0; }
+    .panel-header p { color:var(--muted);font-size:12px;margin:5px 0 0;max-width:600px; }
+    .mini-btn { flex:none;border:0;background:#eef4f8;color:#53687f;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:750; }
+    .mini-btn:hover { background:#e0eaf1; }
+    .rows { padding:0 24px 22px; }
+    .field { display:grid;grid-template-columns:minmax(0,1fr) auto; gap:14px;align-items:center;min-height:66px;padding:12px 0;border-top:1px solid #eef2f6; }
+    .field-title { font-size:14px;font-weight:700;line-height:1.4; }
+    .field-sub { font-size:11.5px;color:var(--muted2);margin-top:3px;line-height:1.38; }
+    .stepper { display:flex;align-items:center;gap:0;border:1px solid #d7e2ec;background:#fff;border-radius:11px;overflow:hidden;height:40px;flex:none; }
+    .stepper button { width:36px;height:100%;border:0;background:#f4f7fa;color:#476079;font-size:20px;line-height:1;font-weight:450; }
+    .stepper button:hover { background:#e4eff4;color:#0b8174; }
+    .stepper input { width:85px;min-width:0;height:100%;border:0;border-left:1px solid #e4eaf1;border-right:1px solid #e4eaf1;text-align:right;padding:0 9px 0 4px;font-size:14px;font-weight:780;color:var(--ink);background:white;border-radius:0; font-variant-numeric:tabular-nums; }
+    .stepper input::-webkit-inner-spin-button,.stepper input::-webkit-outer-spin-button { -webkit-appearance:none;margin:0; }
+    .stepper input[type=number] { -moz-appearance:textfield; appearance:textfield; }
+    .unit { background:#fff;color:#8495a7;font-size:11px;font-weight:700;padding-right:9px; }
+    .panel-footer { display:flex;justify-content:space-between;align-items:center;gap:15px;background:#f8fbfd;border-top:1px solid var(--line);padding:16px 24px; }
+    .panel-footer strong { font-size:20px;letter-spacing:-.5px; }
+    .panel-footer span { font-size:13px;color:var(--muted);font-weight:700; }
+    .right { position:sticky;top:18px; }
+    .results-header { background:var(--navy);color:#fff;padding:23px 24px 21px; }
+    .results-header p { color:#acbed1;font-size:12px;margin:5px 0 0; }
+    .period-switch { background:#253850;border:1px solid #39516b;border-radius:9px;display:flex;padding:3px;gap:2px;margin-top:17px;width:max-content; }
+    .period-switch button { background:none;color:#b9c7d4;border:0;border-radius:7px;font-weight:700;font-size:12px;padding:7px 15px; }
+    .period-switch button.active { background:white;color:var(--navy); }
+    .result-body { padding:25px 24px 22px; }
+    .metric { display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #ecf0f5;font-size:13px; }
+    .metric .metric-label { color:#52647a; }
+    .metric strong { font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap; }
+    .metric.indent .metric-label { padding-left:13px;color:#8091a3; }
+    .metric.total { border-top:2px solid #dfe8ef;border-bottom:0;margin-top:6px;padding-top:19px; }
+    .metric.total .metric-label { font-weight:800;color:var(--ink); }
+    .metric.total strong { font-size:23px;color:var(--teal-dark);letter-spacing:-.65px; }
+    .metric.total strong.loss { color:var(--red); }
+    .ratio { margin-top:21px; }
+    .ratio-head { display:flex;justify-content:space-between;font-size:12px;font-weight:750;margin-bottom:9px; }
+    .ratio-head span:last-child { color:var(--teal-dark); }
+    .bar { height:12px;border-radius:30px;background:#eaf0f4;display:flex;overflow:hidden; }
+    .bar .variable { background:#9eb4c8; }
+    .bar .fixed { background:#46637b; }
+    .bar .profit { background:#08bba6; }
+    .legend { display:flex;flex-wrap:wrap;gap:9px 14px;margin-top:11px; }
+    .legend span { color:#72839a;font-size:11px;display:flex;align-items:center;gap:5px; }
+    .legend i { display:inline-block;width:8px;height:8px;border-radius:3px; }
+    .insight { border-radius:12px;margin-top:21px;background:#f0f9f7;border:1px solid #ccece5;padding:14px 15px; }
+    .insight.warn { background:#fff6f4;border-color:#f6d7cf; }
+    .insight b { font-size:13px; }
+    .insight p { font-size:12px;line-height:1.55;color:#587370;margin:5px 0 0; }
+    .insight.warn p { color:#965e53; }
+    .notes { padding:19px 24px 23px;background:#f9fbfd;border-top:1px solid var(--line); }
+    .notes h3 { font-size:12px;text-transform:uppercase;letter-spacing:.9px;margin:0 0 8px;color:#587087; }
+    .notes p { color:#728397;font-size:11.5px;line-height:1.58;margin:0 0 8px; }
+    .notes p:last-child { margin-bottom:0; }
+    .footer { margin-top:22px;display:flex;justify-content:space-between;gap:15px;align-items:center;color:#8291a3;font-size:12px; }
+    .footer a { color:#42778a; }
+    .toast { position:fixed;right:22px;bottom:20px;padding:12px 16px;border-radius:10px;background:#152639;color:white;box-shadow:0 15px 35px #19263833;font-size:13px;opacity:0;transform:translateY(15px);transition:opacity .18s,transform .18s;pointer-events:none;z-index:10; }
+    .toast.show { opacity:1;transform:translateY(0); }
+    @media(max-width:1080px) { .columns { grid-template-columns: minmax(0,1.1fr) minmax(300px,.9fr); } .kpis { gap:10px; } .kpi { padding:16px; } .kpi .number { font-size:26px; } }
+    @media(max-width:830px) { .shell {padding:0 17px 35px;} .topbar-inner {padding:14px 17px;} header.hero {align-items:flex-start;flex-direction:column;padding:28px 0 22px;} .actions {justify-content:flex-start;} .kpis {grid-template-columns:repeat(2,minmax(0,1fr));} .columns {grid-template-columns:1fr;} .right {position:static;} }
+    @media(max-width:480px) { .brand-name {font-size:20px;} .brand-sub {font-size:10px;} .autosaved {font-size:11px;} h1 {letter-spacing:-.9px;} .panel-header {padding:20px 17px 13px;} .rows {padding:0 17px 18px;} .panel-footer {padding:16px 17px;} .field {gap:8px;} .field-title {font-size:12px;} .field-sub {font-size:10.5px;} .stepper {height:37px;} .stepper button {width:30px;} .stepper input {width:65px;font-size:12px;padding-right:5px;} .unit {font-size:10px;padding-right:5px;} .kpi .number {font-size:24px;} .kpi .label {font-size:11px;} .kpi .sub {font-size:11px;} .actions .btn {flex:1;} .footer {align-items:flex-start;flex-direction:column;} }
+    @media print { .topbar,.actions,.mini-btn,.stepper button,.period-switch { display:none!important; } body {background:white;} .shell {max-width:none;padding:0;} .right {position:static;} .panel,.kpi {box-shadow:none;break-inside:avoid;} .field {min-height:42px;padding:8px 0;} .stepper {border:0;} .stepper input {border:0;width:70px;} .columns {display:block;} .stack {display:block;} .panel {margin-bottom:14px;} }
+  </style>
+</head>
+<body>
+  <nav class="topbar" aria-label="Site header">
+    <div class="topbar-inner">
+      <div class="brand"><div class="brand-symbol" aria-hidden="true"><span>W+</span></div><div><div class="brand-name">Wrench+</div><div class="brand-sub">Garage Profit Planner</div></div></div>
+      <div class="autosaved"><span class="dot" aria-hidden="true"></span><span id="save-status" aria-live="polite">Saved on this device</span></div>
+    </div>
+  </nav>
+  <main class="shell">
+    <header class="hero">
+      <div><div class="eyebrow">Business planning · Netherlands</div><h1>Every job. Every cost.<br>One clear number.</h1><p class="lead">Model the economics of a small independent car-repair garage. Adjust any amount and instantly see revenue, operating surplus and the number of repairs needed to break even.</p></div>
+      <div class="actions">
+        <button class="btn" id="export-json" type="button" title="Save an editable backup of your assumptions">&#8595; Save scenario</button>
+        <button class="btn" id="import-json" type="button" title="Restore a saved scenario">&#8593; Load scenario</button>
+        <button class="btn btn-primary" id="export-csv" type="button">&#8595; Export CSV</button>
+        <input type="file" id="scenario-file" hidden accept=".json,application/json">
+      </div>
+    </header>
+    <section class="kpis" aria-label="Financial overview">
+      <div class="kpi"><div class="label">Monthly revenue · excl. VAT</div><div class="number" id="kpi-revenue">€0</div><div class="sub" id="kpi-revenue-sub">0 completed repairs</div></div>
+      <div class="kpi teal" id="profit-card"><div class="label">Monthly operating surplus</div><div class="number" id="kpi-profit">€0</div><div class="sub">Before owner pay &amp; income tax</div></div>
+      <div class="kpi"><div class="label">Total fixed costs / month</div><div class="number" id="kpi-fixed">€0</div><div class="sub">Rent + all monthly overhead</div></div>
+      <div class="kpi"><div class="label">Break-even workload</div><div class="number" id="kpi-break-even">0</div><div class="sub">Completed repairs / month</div></div>
+    </section>
+    <div class="columns">
+      <div class="stack">
+        <section class="panel" aria-labelledby="assumptions-title">
+          <div class="panel-header"><div><h2 id="assumptions-title">01 &nbsp; Business assumptions</h2><p>Specify your average repair ticket, daily workload and variable cost per job.</p></div><button class="mini-btn" id="reset-assumptions" type="button">Reset</button></div>
+          <div class="rows" id="assumptions-fields"></div>
+        </section>
+        <section class="panel" aria-labelledby="costs-title">
+          <div class="panel-header"><div><h2 id="costs-title">02 &nbsp; Monthly operating costs</h2><p>These are planning estimates, not supplier quotes. Transport is included explicitly. Enter costs net of any recoverable VAT.</p></div><button class="mini-btn" id="reset-costs" type="button">Reset</button></div>
+          <div class="rows" id="cost-fields"></div>
+          <div class="panel-footer"><span>Operating overhead · excluding rent</span><strong id="total-overhead">€0</strong></div>
+        </section>
+      </div>
+      <aside class="right">
+        <section class="panel" aria-labelledby="results-title">
+          <div class="results-header"><h2 id="results-title">Your financial picture</h2><p>A simple operating model for an owner-operated garage</p><div class="period-switch" role="group" aria-label="View period"><button type="button" class="active" data-period="month" aria-pressed="true">Monthly</button><button type="button" data-period="year" aria-pressed="false">Annual</button></div></div>
+          <div class="result-body">
+            <div class="metric"><span class="metric-label">Customer invoices · incl. VAT</span><strong id="r-invoices">€0</strong></div>
+            <div class="metric indent"><span class="metric-label">VAT included in invoices</span><strong id="r-vat">−€0</strong></div>
+            <div class="metric"><span class="metric-label">Revenue · excl. VAT</span><strong id="r-revenue">€0</strong></div>
+            <div class="metric indent"><span class="metric-label">Parts &amp; consumables</span><strong id="r-variable">−€0</strong></div>
+            <div class="metric indent"><span class="metric-label">Workshop rent</span><strong id="r-rent">−€0</strong></div>
+            <div class="metric indent"><span class="metric-label">Other operating overhead</span><strong id="r-overhead">−€0</strong></div>
+            <div class="metric total"><span class="metric-label">Operating surplus</span><strong id="r-surplus">€0</strong></div>
+            <div class="metric"><span class="metric-label">Owner pay target (optional)</span><strong id="r-owner">−€0</strong></div>
+            <div class="metric"><span class="metric-label">After owner pay target</span><strong id="r-after-owner">€0</strong></div>
+            <div class="ratio"><div class="ratio-head"><span>Share of revenue</span><span id="margin-label">0% operating margin</span></div><div class="bar" aria-label="Allocation of revenue between variable costs, fixed costs and surplus"><span class="variable" id="bar-variable"></span><span class="fixed" id="bar-fixed"></span><span class="profit" id="bar-profit"></span></div><div class="legend"><span><i style="background:#9eb4c8"></i>Parts &amp; consumables</span><span><i style="background:#46637b"></i>Fixed costs</span><span><i style="background:#08bba6"></i>Surplus</span></div></div>
+            <div class="insight" id="insight"><b id="insight-title">Break-even estimate</b><p id="insight-text">Change the assumptions to recalculate.</p></div>
+          </div>
+          <div class="notes"><h3>Important calculation notes</h3><p>Customer invoices include VAT; revenue excludes VAT. The default Dutch VAT assumption is 21%. Operating surplus is not take-home pay or taxable profit.</p><p>The model excludes business loans, startup investments, equipment purchase costs, depreciation beyond modeled reserves, unexpected repairs and income tax. The owner's compensation target is shown separately, not treated as a deductible wage expense for a sole proprietor.</p><p>Transport covers local parts collection, fuel, parking and occasional deliveries. For a dedicated vehicle, increase this cost to include ownership/lease, insurance, tax and maintenance. Insurance and regulatory costs need actual quotes.</p></div>
+        </section>
+      </aside>
+    </div>
+    <footer class="footer"><span>Wrench+ · Independent garage planning tool · All data stays in your browser</span><span>Planning estimates only · Not accounting, legal or tax advice</span></footer>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    'use strict';
+    const STORAGE_KEY = 'wrenchplus-garage-planner-v1';
+    const assumptions = [
+      { key:'workingDays', label:'Working days per month', detail:'Available workshop days', unit:'days', step:1, default:20 },
+      { key:'jobsPerDay', label:'Completed jobs per working day', detail:'Average finished customer repairs', unit:'jobs', step:1, default:2 },
+      { key:'invoice', label:'Average customer invoice', detail:'Invoice amount including VAT', unit:'€', step:25, default:250 },
+      { key:'vat', label:'VAT rate on invoices', detail:'Default standard Dutch VAT rate', unit:'%', step:1, default:21 },
+      { key:'parts', label:'Parts cost per repair', detail:'Supplier cost excluding recoverable VAT', unit:'€', step:5, default:75 },
+      { key:'consumables', label:'Consumables per repair', detail:'Gloves, sprays, small workshop materials', unit:'€', step:5, default:10 },
+      { key:'rent', label:'Monthly garage rent', detail:'Workshop lease excluding recoverable VAT', unit:'€', step:50, default:1000 },
+      { key:'ownerTarget', label:'Monthly owner compensation target', detail:'Optional planning target, not a payroll tax calculation', unit:'€', step:100, default:0 }
+    ];
+    const costs = [
+      { key:'energy', label:'Electricity, gas & heating', detail:'Lighting, compressor and heating', step:10, default:170 },
+      { key:'water', label:'Water & sewerage', detail:'Workshop water consumption and drainage', step:5, default:25 },
+      { key:'telecom', label:'Internet & phone', detail:'Business internet and phone contract', step:5, default:35 },
+      { key:'insurance', label:'Business & garage insurance', detail:'Liability, customer vehicles and workshop coverage', step:10, default:120 },
+      { key:'accountant', label:'Bookkeeping & accounting', detail:'VAT returns, accounting and tax support', step:10, default:90 },
+      { key:'tools', label:'Tools & equipment upkeep', detail:'Calibration, maintenance and replacement reserve', step:10, default:100 },
+      { key:'software', label:'Software & diagnostics', detail:'Garage management, scan tools and AI subscriptions', step:10, default:60 },
+      { key:'marketing', label:'Marketing & advertising', detail:'Website, online ads and local visibility', step:10, default:75 },
+      { key:'waste', label:'Waste disposal', detail:'Used oil, filters, tyres and other workshop waste', step:5, default:85 },
+      { key:'banking', label:'Banking & administration', detail:'Bank account, payment processing and stationery', step:5, default:30 },
+      { key:'transport', label:'Transport & logistics', detail:'Fuel, parts collection, parking and deliveries', step:10, default:120 },
+      { key:'compliance', label:'Safety, local taxes & compliance', detail:'Fire safety, permits, inspections and local fees', step:10, default:90 }
+    ];
+    const allFields = [...assumptions, ...costs];
+    const defaults = Object.fromEntries(allFields.map(f=>[f.key,f.default]));
+    let values = loadSaved();
+    let period = 'month';
+    let toastTimeout;
+    const euro = n => new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(Number.isFinite(n)?n:0);
+    const precise = n => Number.isFinite(n)?n:0;
+    function loadSaved(){
+      try { const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)||'null'); return cleanValues(raw); }
+      catch { return {...defaults}; }
+    }
+    function cleanValues(raw){
+      const result={...defaults};
+      if(raw && typeof raw==='object') for(const key of Object.keys(defaults)){
+        const value=Number(raw[key]);
+        if(raw[key]!==null && raw[key]!=='' && Number.isFinite(value) && value>=0 && value<=100000000) result[key]=value;
+      }
+      return result;
+    }
+    function save(){
+      try { localStorage.setItem(STORAGE_KEY,JSON.stringify(values)); document.querySelector('#save-status').textContent='Saved on this device'; }
+      catch { document.querySelector('#save-status').textContent='Local storage unavailable'; }
+    }
+    function fieldHtml(f,group){
+      const id='field-'+f.key;
+      return `<div class="field"><div><label class="field-title" for="${id}">${f.label}</label><div class="field-sub">${f.detail}</div></div><div class="stepper"><button type="button" aria-label="Decrease ${f.label}" data-adjust="${f.key}" data-direction="-1">−</button><input id="${id}" inputmode="decimal" type="number" min="0" max="100000000" step="${f.step}" data-key="${f.key}" aria-label="${f.label}" value="${values[f.key]}"><span class="unit">${f.unit||'€'}</span><button type="button" aria-label="Increase ${f.label}" data-adjust="${f.key}" data-direction="1">+</button></div></div>`;
+    }
+    function renderFields(){
+      document.querySelector('#assumptions-fields').innerHTML=assumptions.map(f=>fieldHtml(f,'assumption')).join('');
+      document.querySelector('#cost-fields').innerHTML=costs.map(f=>fieldHtml(f,'cost')).join('');
+    }
+    function calculate(){
+      const v=values;
+      const jobs=v.workingDays*v.jobsPerDay;
+      const gross=jobs*v.invoice;
+      const revenue=gross/(1+v.vat/100);
+      const overhead=costs.reduce((sum,f)=>sum+v[f.key],0);
+      const variable=jobs*(v.parts+v.consumables);
+      const fixed=v.rent+overhead;
+      const surplus=revenue-variable-fixed;
+      const contribution=v.invoice/(1+v.vat/100)-v.parts-v.consumables;
+      const breakEven=contribution>0?Math.ceil(fixed/contribution):null;
+      const breakEvenOwner=contribution>0?Math.ceil((fixed+v.ownerTarget)/contribution):null;
+      return { jobs,gross,revenue,vat:gross-revenue,overhead,variable,fixed,surplus,contribution,breakEven,breakEvenOwner,margin:revenue>0?surplus/revenue*100:0 };
+    }
+    function renderResults(){
+      const v=values, m=calculate(), factor=period==='year'?12:1;
+      const put=(id,value)=>{ document.getElementById(id).textContent=value; };
+      const money=(id,value)=>put(id,euro(value*factor));
+      put('kpi-revenue',euro(m.revenue)); put('kpi-profit',euro(m.surplus)); put('kpi-fixed',euro(m.fixed));
+      put('kpi-break-even',m.breakEven===null?'N/A':m.breakEven.toLocaleString('nl-NL'));
+      put('kpi-revenue-sub',`${m.jobs.toLocaleString('nl-NL')} completed repairs`);
+      put('total-overhead',euro(m.overhead));
+      money('r-invoices',m.gross); put('r-vat','−'+euro(m.vat*factor));
+      money('r-revenue',m.revenue); put('r-variable','−'+euro(m.variable*factor));
+      put('r-rent','−'+euro(v.rent*factor));put('r-overhead','−'+euro(m.overhead*factor));
+      money('r-surplus',m.surplus);put('r-owner','−'+euro(v.ownerTarget*factor));money('r-after-owner',m.surplus-v.ownerTarget);
+      document.getElementById('r-surplus').classList.toggle('loss',m.surplus<0);
+      const card=document.getElementById('profit-card');card.classList.toggle('negative',m.surplus<0);card.classList.toggle('teal',m.surplus>=0);
+      put('margin-label',`${m.margin.toFixed(1)}% operating margin`);
+      const denominator=Math.max(m.revenue,m.variable+m.fixed,1);
+      const widths=[m.variable,m.fixed,Math.max(0,m.surplus)].map(n=>Math.max(0,100*n/denominator));
+      ['bar-variable','bar-fixed','bar-profit'].forEach((id,i)=>document.getElementById(id).style.width=`${widths[i]}%`);
+      const insight=document.getElementById('insight');
+      const dayLabel=v.workingDays>0?(m.breakEven/v.workingDays).toFixed(1):'—';
+      if(m.breakEven===null){
+        put('insight-title','Each job loses money before overhead');
+        put('insight-text','Increase the invoice or lower parts and consumables: your average revenue per repair does not cover its direct cost.');
+        insight.classList.add('warn');
+      } else if(m.surplus<0){
+        put('insight-title',`Break-even: ${m.breakEven} jobs / month`);
+        put('insight-text',`That is about ${dayLabel} jobs per working day, before owner compensation. Current workload is below break-even.`);
+        insight.classList.add('warn');
+      } else {
+        put('insight-title',`Break-even: ${m.breakEven} jobs / month`);
+        put('insight-text',`About ${dayLabel} jobs per working day before owner compensation.${v.ownerTarget>0?` Including your owner-pay target: ${m.breakEvenOwner} jobs/month.`:''}`);
+        insight.classList.remove('warn');
+      }
+    }
+    function handleFieldInput(event){
+      const input=event.target.closest('input[data-key]');if(!input)return;
+      const n=Number(input.value);
+      if(input.value!=='' && Number.isFinite(n) && n>=0 && n<=100000000){ values[input.dataset.key]=n;save();renderResults(); }
+    }
+    document.addEventListener('input',handleFieldInput);
+    document.addEventListener('change',event=>{
+      const input=event.target.closest('input[data-key]');if(!input)return;
+      if(input.value===''||!Number.isFinite(Number(input.value))||Number(input.value)<0||Number(input.value)>100000000){input.value=values[input.dataset.key];}
+    });
+    document.addEventListener('click',event=>{
+      const button=event.target.closest('button[data-adjust]');if(!button)return;
+      const key=button.dataset.adjust;
+      const field=allFields.find(f=>f.key===key);
+      values[key]=Math.max(0,Math.min(100000000,values[key]+Number(button.dataset.direction)*field.step));
+      document.querySelector(`input[data-key="${key}"]`).value=values[key];save();renderResults();
+    });
+    document.querySelectorAll('[data-period]').forEach(button=>button.addEventListener('click',()=>{
+      period=button.dataset.period;
+      document.querySelectorAll('[data-period]').forEach(b=>{const active=b.dataset.period===period;b.classList.toggle('active',active);b.setAttribute('aria-pressed',active?'true':'false');});
+      renderResults();
+    }));
+    function resetFieldGroup(fields){fields.forEach(f=>{values[f.key]=f.default;});renderFields();save();renderResults();notify('Default values restored');}
+    document.getElementById('reset-assumptions').addEventListener('click',()=>resetFieldGroup(assumptions));
+    document.getElementById('reset-costs').addEventListener('click',()=>resetFieldGroup(costs));
+    function download(name,contents,mime){
+      const blob=new Blob([contents],{type:mime});const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+    }
+    document.getElementById('export-json').addEventListener('click',()=>{
+      download('wrenchplus-scenario.json',JSON.stringify({app:'wrenchplus-garage-planner',version:1,values},null,2),'application/json');notify('Scenario saved to a JSON file');
+    });
+    document.getElementById('import-json').addEventListener('click',()=>document.getElementById('scenario-file').click());
+    document.getElementById('scenario-file').addEventListener('change',async event=>{
+      const file=event.target.files[0];if(!file)return;
+      try {const data=JSON.parse(await file.text());if(!data||data.app!=='wrenchplus-garage-planner'||!data.values||typeof data.values!=='object')throw new Error('Invalid format');values=cleanValues(data.values);renderFields();save();renderResults();notify('Scenario loaded');}
+      catch{notify('This is not a valid Wrench+ scenario file');}
+      event.target.value='';
+    });
+    function csvEscape(value){return '"'+String(value).replaceAll('"','""')+'"';}
+    document.getElementById('export-csv').addEventListener('click',()=>{
+      const m=calculate();let lines=[['Category','Item','Amount (EUR)','Unit']];
+      for(const f of assumptions)lines.push(['Assumptions',f.label,values[f.key],f.unit||'EUR/month']);
+      for(const f of costs)lines.push(['Monthly operating costs',f.label,values[f.key],'EUR/month']);
+      lines.push(['Results','Monthly customer invoices incl VAT',m.gross,'EUR/month']);
+      lines.push(['Results','Monthly revenue excl VAT',m.revenue,'EUR/month']);
+      lines.push(['Results','Monthly parts and consumables',m.variable,'EUR/month']);
+      lines.push(['Results','Monthly fixed costs incl rent',m.fixed,'EUR/month']);
+      lines.push(['Results','Monthly operating surplus before owner pay and tax',m.surplus,'EUR/month']);
+      lines.push(['Results','Break-even jobs/month',m.breakEven??'N/A','jobs/month']);
+      download('wrenchplus-calculation.csv','\ufeff'+lines.map(row=>row.map(csvEscape).join(',')).join('\r\n'),'text/csv;charset=utf-8');notify('CSV exported');
+    });
+    function notify(text){const el=document.getElementById('toast');el.textContent=text;el.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el.classList.remove('show'),2600);}
+    renderFields();renderResults();save();
+  </script>
+</body>
+</html>
